@@ -16,12 +16,43 @@ class NGScanner:
     def __init__(self, tokens: List[Tuple[Token,str,Callable[[Lexeme],Lexeme]]]) -> None:
         self.tokens = tokens
 
+        # build and compile master regex
+        parts = []
+        self.name_to_token = {}
+        self.name_to_action = {}
+        for tok, regex, action in self.tokens:
+            name = tok.name
+            parts.append(f"(?P<{name}>{regex})")
+            self.name_to_token[name] = tok
+            self.name_to_action[name] = action
+        self.master = re.compile(r"^(?:" + "|".join(parts) + ")")
+        self.istring = ""
+
     def input_string(self, input_string:str) -> None:
         self.istring = input_string
         
     def token(self) -> Optional[Lexeme]:
-        # Implement me!
-        pass
+        # loop until we find a token we can return or until the string is empty
+        while True:
+            if len(self.istring) == 0:
+                return None
+
+            m = self.master.match(self.istring)
+            if not m:
+                raise ScannerException()
+
+            name = m.lastgroup
+            text = m.group(name)
+            tok = self.name_to_token[name]
+            action = self.name_to_action[name]
+
+            ret = action(Lexeme(tok, text))
+
+            # chop input string
+            self.istring = self.istring[len(ret.value):]
+
+            if ret.token != Token.IGNORE:
+                return ret
 
 if __name__ == "__main__":
 
@@ -47,4 +78,4 @@ if __name__ == "__main__":
         if (verbose):
             print(t)
     end = time()
-    print("time to parse (seconds): ",str(end-start))    
+    print("time to parse (seconds): ",str(end-start))

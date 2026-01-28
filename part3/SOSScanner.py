@@ -21,8 +21,34 @@ class SOSScanner:
         self.istring = input_string
 
     def token(self) -> Optional[Lexeme]:
-        # Implement me!
-        pass
+        # keep track of longest match
+        while True:
+            if len(self.istring) == 0:
+                return None
+
+            matches = []
+            # try all tokens
+            for tok, regex, action in self.tokens:
+                m = re.match(regex, self.istring)
+                if m:
+                    matches.append((tok, m, action))
+
+            if not matches:
+                raise ScannerException()
+
+            # get longest match
+            longest = max(matches, key=lambda x: len(x[1][0]))
+
+            # get return value 
+            ret = longest[2](Lexeme(longest[0], longest[1][0]))
+
+            # chop input string
+            chop = len(ret.value)
+            self.istring = self.istring[chop:]
+
+            # return non ignore tokens
+            if ret.token != Token.IGNORE:
+                return ret
 
 if __name__ == "__main__":
 
@@ -48,4 +74,4 @@ if __name__ == "__main__":
         if (verbose):
             print(t)
     end = time()
-    print("time to parse (seconds): ",str(end-start))    
+    print("time to parse (seconds): ",str(end-start))

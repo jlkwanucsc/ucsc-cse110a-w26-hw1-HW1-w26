@@ -39,6 +39,8 @@ class Token(Enum):
     ID     = "ID"
     NUM    = "NUM"
 
+    # new token
+    INCR   = "INCR" 
 
 class Lexeme:
     def __init__(self, token:Token, value:str) -> None:
@@ -63,11 +65,18 @@ class NaiveScanner:
         if self.ss.is_empty():
             return None
 
-        # Scan for the single character tokens
+        # handle addition
         if self.ss.peek_char() == "+":
+            # check for increment
+            if len(self.ss.string) >= 2 and self.ss.string[1] == "+":
+                self.ss.eat_char()
+                self.ss.eat_char()
+                return Lexeme(Token.INCR, "++")
+            # otherwise just addition
             self.ss.eat_char()
             return Lexeme(Token.ADD, "+")
-        
+
+        # handle multiplication
         if self.ss.peek_char() == "*":
             self.ss.eat_char()
             return Lexeme(Token.MULT, "*")
@@ -76,25 +85,61 @@ class NaiveScanner:
             self.ss.eat_char()
             return Lexeme(Token.ASSIGN, "=")
 
-        # Scan for the multi character tokens
+        if self.ss.peek_char() == ";":
+            self.ss.eat_char()
+            return Lexeme(Token.SEMI, ";")
+
+        # handle identifiers
         if self.ss.peek_char() in CHARS:
             value = ""
-            while self.ss.peek_char() in CHARS:
+            # get first character
+            value += self.ss.peek_char()
+            self.ss.eat_char()
+            # get remaining characters
+            while (self.ss.peek_char() in CHARS) or (self.ss.peek_char() in NUMS):
                 value += self.ss.peek_char()
                 self.ss.eat_char()
             return Lexeme(Token.ID, value)
 
-        if self.ss.peek_char() in NUMS:
+        # handle numbers
+        if (self.ss.peek_char() in NUMS) or (self.ss.peek_char() == "."):
             value = ""
+            seen_dot = False
+
+            # get leading dot portion
+            if self.ss.peek_char() == ".":
+                seen_dot = True
+                value += "."
+                self.ss.eat_char()
+                if self.ss.peek_char() not in NUMS:
+                    raise ScannerException("Malformed number: missing digits after '.'")
+                while self.ss.peek_char() in NUMS:
+                    value += self.ss.peek_char()
+                    self.ss.eat_char()
+                return Lexeme(Token.NUM, value)
+
+            # get integer portion
             while self.ss.peek_char() in NUMS:
                 value += self.ss.peek_char()
                 self.ss.eat_char()
+
+            # get trailing dot portion
+            if (self.ss.peek_char() == ".") and (not seen_dot):
+                seen_dot = True
+                value += "."
+                self.ss.eat_char()
+                if self.ss.peek_char() not in NUMS:
+                    raise ScannerException("Malformed number: missing digits after '.'")
+                while self.ss.peek_char() in NUMS:
+                    value += self.ss.peek_char()
+                    self.ss.eat_char()
+
             return Lexeme(Token.NUM, value)
 
         # if we cannot match a token, throw an exception
         # you should implement a line number to pass
         # to the exeception
-        raise ScannerException()
+        raise ScannerException("Unrecognized character: " + str(self.ss.peek_char()))
     
 
 if __name__ == "__main__":
