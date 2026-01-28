@@ -36,9 +36,10 @@ class EMScanner:
                     # * first element is the token type
                     # * second is the possible match
                     # * third is the token action
-                    matches.append((t[0],
-                                    re.fullmatch(t[1],self.istring[:l]),
-                                    t[2]))
+                    (tok, pattern, token_action) = t[0], t[1], t[2]
+                    matches.append((tok,
+                                    re.fullmatch(pattern,self.istring[:l]),
+                                    token_action))
 
                 # Check if there is any token that returned a match
                 # If so break out of the substring loop
@@ -54,11 +55,16 @@ class EMScanner:
             longest = matches[0]
 
             # apply the token action
-            ret = longest[2](Lexeme(longest[0],longest[1][0]))
+            # Use variable names to make the code more readable
+            tok    = longest[0]       # token found
+            mtch   = longest[1]      # match found
+            action = longest[2]    # action function
+            value_found = mtch[0]  # value that created the match
+            ret = action(Lexeme(tok, value_found))
 
             # figure how much we need to chop from our input string
 
-            chop = len(ret.value)
+            chop = len(value_found)   # amount to chop string by
             self.istring = self.istring[chop:]
 
             # if we did not match an IGNORE token, then we can
