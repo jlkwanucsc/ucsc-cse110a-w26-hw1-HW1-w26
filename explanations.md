@@ -33,7 +33,7 @@ My tokens.py file lives under the part2 folder and it defines all required token
 For ID, my RE definition is `[A-Za-z][A-Za-z0-9]*` ad it matches letters, then letters/digits, and it cannot start with a digit.
 For NUM, my RE definition is `(?:[0-9]+(?:\.[0-9]+)?)|(?:\.[0-9]+)` and it matches integer or decimal, allows leading dot, and requires digits after dot.
 For HNUM, my RE definition is `0[xX][0-9a-fA-F]+` and it matches hex (letters a-f) and is case-insensitive.
-- For all of the operatorsa and punct, my RE definitions are `\+\+`, `\+`, `\*`, `;`, `\(`, `\)`, `\{`, `\}`, `=` and they match the corresponding symbol.
+For all of the operators and punctutations, my RE definitions are `\+\+`, `\+`, `\*`, `;`, `\(`, `\)`, `\{`, `\}`, `=` and they match the corresponding symbol.
 For IGNORE, my RE definition is `[ \t\n]+` and it skips any whitespaces or newlines.
 For the token actions, `if`, `else`, `while`, `int`, `float`, they are mapped in `id_action`.
 
